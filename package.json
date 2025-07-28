@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node ./index.ts",
+    "dev": "nodemon server/index.ts",
     "stripe": "stripe-listen --forward-to localhost:8000/api/v1/order/webhook",
-    "build": "tsc",
-    "start": "node --max-old-space-size=512 dist/index.js"
+    "build": "npm install && npm install --prefix client && npm run build --prefix client",
+    "start": "nodemon server/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -36,6 +36,6 @@
     "@types/node": "^22.10.7",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.7.3"
   }
 }
