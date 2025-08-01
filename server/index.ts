@@ -48,7 +48,11 @@ app.use("/api/v1/restaurant", restaurantRoute);
 app.use("/api/v1/menu", menuRoute);
 app.use("/api/v1/order", orderRoute);
 
-app.use(express.static(path.join(DIRNAME, "/client/dist")));
+app.use(express.static(path.join(DIRNAME, "/client/dist"), {
+  maxAge: '1y',
+  etag: true,
+  lastModified: true
+}));
 app.use("*", (_,res) => {
   res.sendFile(path.resolve(DIRNAME, "client", "dist", "index.html"));
 });
