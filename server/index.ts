@@ -1,5 +1,10 @@
-import express from "express";
 import dotenv from "dotenv";
+import path from "path";
+
+// Load environment variables from the server directory
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+import express from "express";
 import connectDB from "./db/connectDB";
 
 import bodyParser from "body-parser"
@@ -8,9 +13,7 @@ import cors from "cors";
 import userRoute from "./routes/user.route";
 import restaurantRoute from "./routes/restaurant.route";
 import menuRoute from "./routes/menu.route";
-dotenv.config();
 import orderRoute from "./routes/order.route";
-import path from "path"
 const app = express();
 
 
@@ -23,7 +26,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json());
 app.use(cookieParser());
 const corsOptions = {
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin: "http://localhost:5173",
   credentials: true
 }
 app.use(cors(corsOptions));
@@ -41,5 +44,5 @@ app.use("*", (_,res) => {
 
 app.listen(PORT, () => {
   connectDB();
-  console.log(`Server listening at port ${PORT}`); 
+  console.log(`Server listening at port ${PORT}`);  
 })
