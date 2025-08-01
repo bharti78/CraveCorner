@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-const API_END_POINT = "http://localhost:8000/api/v1/restaurant";
+const API_END_POINT = import.meta.env.PROD 
+  ? "https://cravecorner.onrender.com/api/v1/restaurant"
+  : "http://localhost:8000/api/v1/restaurant";
 axios.defaults.withCredentials = true;
 
 export const useRestaurantStore = create<RestaurantState>()(persist((set, get) => ({
