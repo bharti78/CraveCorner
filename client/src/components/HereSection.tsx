@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 import { Button } from "./ui/button";
@@ -38,11 +38,22 @@ const HereSection = () => {
         </div>
       </div>
       <div>
-        <img
-          src={HereImage}
-          alt=""
-          className="object-cover w-full max-h-[500px]"
-        />
+        <Suspense fallback={
+          <div className="w-full max-h-[500px] bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+            <div className="text-gray-500">Loading...</div>
+          </div>
+        }>
+          <img
+            src={HereImage}
+            alt="Delicious pizza"
+            className="object-cover w-full max-h-[500px] rounded-lg"
+            loading="lazy"
+            onLoad={(e) => {
+              e.currentTarget.style.opacity = '1';
+            }}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+          />
+        </Suspense>
       </div>
     </div>
   );
