@@ -1,8 +1,15 @@
 import dotenv from "dotenv";
 import path from "path";
 
-// Load environment variables from the server directory
-dotenv.config({ path: path.join(__dirname, '.env') });
+// Load environment variables - try multiple paths
+const envPath = path.join(__dirname, '..', '.env');
+const serverEnvPath = path.join(__dirname, '.env');
+
+dotenv.config({ path: envPath });
+dotenv.config({ path: serverEnvPath });
+
+// Fallback to default .env loading
+dotenv.config();
 
 import express from "express";
 import connectDB from "./db/connectDB";
