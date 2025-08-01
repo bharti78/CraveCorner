@@ -4,9 +4,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon server/index.ts",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "nodemon server/index.ts",
+    "dev:full": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "stripe": "stripe-listen --forward-to localhost:8000/api/v1/order/webhook",
     "build": "npm install && npm install --prefix client && npm run build --prefix client",
-    "start": "nodemon server/index.ts"
+    "start": "npm run build && node --max-old-space-size=4096 -r ts-node/register server/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -34,6 +37,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.10.7",
+    "concurrently": "^9.2.0",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
