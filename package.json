@@ -8,8 +8,8 @@
     "dev:server": "nodemon server/index.ts",
     "dev:full": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "stripe": "stripe-listen --forward-to localhost:8000/api/v1/order/webhook",
-    "build": "npm install && npm install --prefix client && npm run build --prefix client",
-    "start": "npm run build && node --max-old-space-size=4096 -r ts-node/register server/index.ts"
+    "build": "npm install --prefix client && npm run build --prefix client",
+    "start": "node --max-old-space-size=4096 -r ts-node/register server/index.ts"
   },
   "keywords": [],
   "author": "",
