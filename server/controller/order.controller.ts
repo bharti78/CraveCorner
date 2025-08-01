@@ -3,7 +3,18 @@ import { Restaurant } from "../models/restaurant.model";
 import { Order } from "../models/order.model";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Initialize Stripe lazily to ensure environment variables are loaded
+let stripe: Stripe;
+
+const getStripe = () => {
+    if (!stripe) {
+        if (!process.env.STRIPE_SECRET_KEY) {
+            throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+        }
+        stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    }
+    return stripe;
+};
 
 type CheckoutSessionRequest = {
     cartItems: {
@@ -57,7 +68,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         const menuItems = restaurant.menus;
         const lineItems = createLineItems(checkoutSessionRequest, menuItems);
 
-        const session = await stripe.checkout.sessions.create({
+        const session = await getStripe().checkout.sessions.create({
             payment_method_types: ['card'],
             shipping_address_collection: {
                 allowed_countries: ['GB', 'US', 'CA']
@@ -95,13 +106,13 @@ export const stripeWebhook = async (req: Request, res: Response) => {
         const secret = process.env.WEBHOOK_ENDPOINT_SECRET!;
 
         // Generate test header string for event construction
-        const header = stripe.webhooks.generateTestHeaderString({
+        const header = getStripe().webhooks.generateTestHeaderString({
             payload: payloadString,
             secret,
         });
 
         // Construct the event using the payload string and header
-        event = stripe.webhooks.constructEvent(payloadString, header, secret);
+        event = getStripe().webhooks.constructEvent(payloadString, header, secret);
     } catch (error: any) {
         console.error('Webhook error:', error.message);
         return res.status(400).send(`Webhook error: ${error.message}`);
