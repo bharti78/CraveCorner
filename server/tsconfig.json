@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "Node16",
     "target": "ES2020",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -14,13 +14,14 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "noImplicitAny": false,
-    "moduleResolution": "node"
+    "moduleResolution": "node16"
   },
   "include": [
     "**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "mailtrap"
   ]
 }

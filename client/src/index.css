@@ -69,3 +69,33 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes gradient-xy {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+@keyframes gradient-y {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: center top;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: center bottom;
+  }
+}
+
+.animate-gradient-xy {
+  animation: gradient-xy 15s ease infinite;
+}
+
+.animate-gradient-y {
+  animation: gradient-y 20s ease infinite;
+}

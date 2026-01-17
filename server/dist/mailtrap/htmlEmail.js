@@ -1,4 +1,7 @@
-export const htmlContent: string = `
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.generateResetSuccessEmailHtml = exports.generatePasswordResetOtpHtml = exports.generatePasswordResetEmailHtml = exports.generateWelcomeEmailHtml = exports.htmlContent = void 0;
+exports.htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -75,9 +78,8 @@ export const htmlContent: string = `
     </body>
     </html>
     `;
-
-export const generateWelcomeEmailHtml = (name: string) => {
-  return `
+const generateWelcomeEmailHtml = (name) => {
+    return `
           <html>
             <head>
               <style>
@@ -131,9 +133,9 @@ export const generateWelcomeEmailHtml = (name: string) => {
           </html>
         `;
 };
-
-export const generatePasswordResetEmailHtml = (resetURL: string) => {
-  return `
+exports.generateWelcomeEmailHtml = generateWelcomeEmailHtml;
+const generatePasswordResetEmailHtml = (resetURL) => {
+    return `
       <html>
         <head>
           <style>
@@ -197,9 +199,9 @@ export const generatePasswordResetEmailHtml = (resetURL: string) => {
       </html>
     `;
 };
-
-export const generatePasswordResetOtpHtml = (otp: string) => {
-  return `
+exports.generatePasswordResetEmailHtml = generatePasswordResetEmailHtml;
+const generatePasswordResetOtpHtml = (otp) => {
+    return `
       <html>
         <head>
           <style>
@@ -263,9 +265,9 @@ export const generatePasswordResetOtpHtml = (otp: string) => {
       </html>
     `;
 };
-
-export const generateResetSuccessEmailHtml = () => {
-  return `
+exports.generatePasswordResetOtpHtml = generatePasswordResetOtpHtml;
+const generateResetSuccessEmailHtml = () => {
+    return `
       <html>
         <head>
           <style>
@@ -318,3 +320,4 @@ export const generateResetSuccessEmailHtml = () => {
       </html>
     `;
 };
+exports.generateResetSuccessEmailHtml = generateResetSuccessEmailHtml;

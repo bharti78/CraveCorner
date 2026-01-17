@@ -7,6 +7,7 @@ type ThemeStore = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   loadThemeFromStorage: (storageKey: string, defaultTheme: Theme) => void;
+  initializeTheme: () => void;
 };
 
 export const useThemeStore = create<ThemeStore>()(

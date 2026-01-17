@@ -3,14 +3,12 @@ import { User } from "../models/user.model";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import cloudinary from "../utils/cloudinary";
-import { generateVerificationCode } from "../utils/generateVerificationCode";
 import { generateToken } from "../utils/generateToken";
 import {
   sendPasswordResetEmail,
   sendResetSuccessEmail,
-  sendVerificationEmail,
-  sendWelcomeEmail,
 } from "../mailtrap/email";
+import { OAuth2Client } from "google-auth-library";
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -24,19 +22,14 @@ export const signup = async (req: Request, res: Response) => {
       });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationToken = generateVerificationCode();
 
     user = await User.create({
       fullname,
       email,
       password: hashedPassword,
       contact: Number(contact),
-      verificationToken,
-      verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      isVerified: true,
     });
-    generateToken(res, user);
-
-    await sendVerificationEmail(email, verificationToken);
 
     const userWithoutPassword = await User.findOne({ email }).select(
       "-password"
@@ -89,7 +82,7 @@ export const login = async (req: Request, res: Response) => {
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { verificationCode } = req.body;
-    
+
     const user = await User.findOne({
       verificationToken: verificationCode,
       verificationTokenExpiresAt: { $gt: Date.now() },
@@ -105,9 +98,6 @@ export const verifyEmail = async (req: Request, res: Response) => {
     user.verificationToken = undefined;
     user.verificationTokenExpiresAt = undefined;
     await user.save();
-
-    // send welcome email
-    await sendWelcomeEmail(user.email, user.fullname);
 
     return res.status(200).json({
       success: true,
@@ -142,7 +132,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
       });
     }
 
-    const resetToken = crypto.randomBytes(40).toString("hex");
+    const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
     const resetTokenExpiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
 
     user.resetPasswordToken = resetToken;
@@ -150,14 +140,11 @@ export const forgotPassword = async (req: Request, res: Response) => {
     await user.save();
 
     // send email
-    await sendPasswordResetEmail(
-      user.email,
-      `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`
-    );
+    await sendPasswordResetEmail(user.email, resetToken);
 
     return res.status(200).json({
       success: true,
-      message: "Password reset link sent to your email",
+      message: "Password reset OTP sent to your email",
     });
   } catch (error) {
     console.error(error);
@@ -175,7 +162,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Invalid or expired reset token",
+        message: "Invalid or expired OTP",
       });
     }
     //update password
@@ -245,5 +232,83 @@ export const updateProfile = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const googleAuth = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Google token is required",
+      });
+    }
+
+    // Initialize Google OAuth client
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+    // Verify the Google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Google token",
+      });
+    }
+
+    const { email, name, picture } = payload;
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user if doesn't exist
+      user = new User({
+        fullname: name || email.split("@")[0],
+        email,
+        password: crypto.randomBytes(20).toString("hex"), // Random password
+        contact: 0, // Default contact
+        isVerified: true, // Google users are pre-verified
+        profilePicture: picture || "",
+      });
+
+      await user.save();
+    } else {
+      // Update existing user's profile picture if not set
+      if (!user.profilePicture && picture) {
+        user.profilePicture = picture;
+        await user.save();
+      }
+    }
+
+    // Generate JWT token
+    const tokenValue = generateToken(res, user);
+
+    // Set HTTP-only cookie
+    res.cookie("token", tokenValue, {
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    return res.status(200).json({
+      success: true,
+      user,
+      message: "Google authentication successful",
+    });
+  } catch (error) {
+    console.error("Google auth error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during Google authentication",
+    });
   }
 };

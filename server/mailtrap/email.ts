@@ -1,15 +1,21 @@
-import { generatePasswordResetEmailHtml, generateResetSuccessEmailHtml, generateWelcomeEmailHtml, htmlContent } from "./htmlEmail";
-import { client, sender } from "./mailtrap";
+import nodemailer from "nodemailer";
+import { generatePasswordResetOtpHtml, generateResetSuccessEmailHtml, generateWelcomeEmailHtml, htmlContent } from "./htmlEmail";
+
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
 
 export const sendVerificationEmail = async (email: string, verificationToken: string) => {
-    const recipient = [{ email }];
     try {
-        const res = await client.send({
-            from: sender,
-            to: recipient,
-            subject: 'Verify your email',
-            html:htmlContent.replace("{verificationToken}", verificationToken),
-            category: 'Email Verification'
+        await transporter.sendMail({
+            from: `"Crave Corner" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Verify your email",
+            html: htmlContent.replace("{verificationToken}", verificationToken),
         });
     } catch (error) {
         console.log(error);
@@ -18,34 +24,27 @@ export const sendVerificationEmail = async (email: string, verificationToken: st
     }
 }
 export const sendWelcomeEmail = async (email: string, name: string) => {
-    const recipient = [{ email }];
-    const htmlContent = generateWelcomeEmailHtml(name);
     try {
-        const res = await client.send({
-            from: sender,
-            to: recipient,
-            subject: 'Welcome to CraveCorner',
-            html:htmlContent,
-            template_variables:{
-                company_info_name:"CraveCorner",
-                name:name
-            }
+        const html = generateWelcomeEmailHtml(name);
+        await transporter.sendMail({
+            from: `"Crave Corner" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Welcome to CraveCorner",
+            html,
         });
     } catch (error) {
         console.log(error);
         throw new Error("Failed to send welcome email")
     }
 }
-export const sendPasswordResetEmail = async (email:string, resetURL:string) => {
-    const recipient = [{ email }];
-    const htmlContent = generatePasswordResetEmailHtml(resetURL);
+export const sendPasswordResetEmail = async (email:string, otp:string) => {
     try {
-        const res = await client.send({
-            from: sender,
-            to: recipient,
-            subject: 'Reset your password',
-            html:htmlContent,
-            category:"Reset Password"
+        const html = generatePasswordResetOtpHtml(otp);
+        await transporter.sendMail({
+            from: `"Crave Corner" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Reset your password - OTP",
+            html,
         });
     } catch (error) {
         console.log(error);
@@ -53,15 +52,13 @@ export const sendPasswordResetEmail = async (email:string, resetURL:string) => {
     }
 }
 export const sendResetSuccessEmail = async (email:string) => {
-    const recipient = [{ email }];
-    const htmlContent = generateResetSuccessEmailHtml();
     try {
-        const res = await client.send({
-            from: sender,
-            to: recipient,
-            subject: 'Password Reset Successfully',
-            html:htmlContent,
-            category:"Password Reset"
+        const html = generateResetSuccessEmailHtml();
+        await transporter.sendMail({
+            from: `"Crave Corner" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Password Reset Successful",
+            html,
         });
     } catch (error) {
         console.log(error);

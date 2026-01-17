@@ -2,6 +2,7 @@ import express from "express";
 import {
   checkAuth,
   forgotPassword,
+  googleAuth,
   login,
   logout,
   resetPassword,
@@ -22,5 +23,6 @@ router.route("/verify-email").post(asyncHandler(verifyEmail));
 router.route("/forgot-password").post(asyncHandler(forgotPassword));
 router.route("/reset-password/:token").post(asyncHandler(resetPassword));
 router.route("/profile/update").put(asyncHandler(isAuthenticated), asyncHandler(updateProfile));
+router.route("/google-auth").post(asyncHandler(googleAuth));
 
 export default router;

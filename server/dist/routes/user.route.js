@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const user_controller_1 = require("../controller/user.controller");
+const isAuthenticated_1 = require("../middlewares/isAuthenticated");
+const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
+const router = express_1.default.Router();
+router.route("/check-auth").get((0, asyncHandler_1.default)(isAuthenticated_1.isAuthenticated), (0, asyncHandler_1.default)(user_controller_1.checkAuth));
+router.route("/signup").post((0, asyncHandler_1.default)(user_controller_1.signup));
+router.route("/login").post((0, asyncHandler_1.default)(user_controller_1.login));
+router.route("/logout").post((0, asyncHandler_1.default)(user_controller_1.logout));
+router.route("/verify-email").post((0, asyncHandler_1.default)(user_controller_1.verifyEmail));
+router.route("/forgot-password").post((0, asyncHandler_1.default)(user_controller_1.forgotPassword));
+router.route("/reset-password/:token").post((0, asyncHandler_1.default)(user_controller_1.resetPassword));
+router.route("/profile/update").put((0, asyncHandler_1.default)(isAuthenticated_1.isAuthenticated), (0, asyncHandler_1.default)(user_controller_1.updateProfile));
+router.route("/google-auth").post((0, asyncHandler_1.default)(user_controller_1.googleAuth));
+exports.default = router;
