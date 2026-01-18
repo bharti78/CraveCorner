@@ -8,7 +8,7 @@ import {
 
 // Create multiple transporters for fallback
 const createTransporter = (config: any) => {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     ...config,
     tls: {
       rejectUnauthorized: false,
