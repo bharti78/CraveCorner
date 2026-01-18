@@ -43,7 +43,6 @@ A modern, full-stack food delivery web application built with React, Node.js, an
 ### Services & Tools
 - **Stripe** - Payment processing and checkout
 - **Cloudinary** - Cloud image and video management
-- **Mailtrap** - Email testing and delivery
 - **Render** - Cloud deployment platform
 - **GitHub** - Version control and CI/CD
 

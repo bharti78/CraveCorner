@@ -30,6 +30,7 @@ export const sendVerificationEmail = async (
     throw new Error("Failed to send email verification");
   }
 };
+
 export const sendWelcomeEmail = async (email: string, name: string) => {
   try {
     const html = generateWelcomeEmailHtml(name);
@@ -44,6 +45,7 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
     throw new Error("Failed to send welcome email");
   }
 };
+
 export const sendPasswordResetEmail = async (email: string, otp: string) => {
   try {
     const html = generatePasswordResetOtpHtml(otp);
@@ -58,6 +60,7 @@ export const sendPasswordResetEmail = async (email: string, otp: string) => {
     throw new Error("Failed to reset password");
   }
 };
+
 export const sendResetSuccessEmail = async (email: string) => {
   try {
     const html = generateResetSuccessEmailHtml();

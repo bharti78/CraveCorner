@@ -7,7 +7,7 @@ import { generateToken } from "../utils/generateToken";
 import {
   sendPasswordResetEmail,
   sendResetSuccessEmail,
-} from "../mailtrap/email";
+} from "../utils/email";
 import { OAuth2Client } from "google-auth-library";
 
 export const signup = async (req: Request, res: Response) => {
