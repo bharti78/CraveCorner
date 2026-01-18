@@ -7,7 +7,7 @@ import {
 } from "./htmlEmail";
 
 // Create multiple transporters for fallback
-const createTransporter = (config: any) => {
+const createTransporter = (config: any, fastFail: boolean = false) => {
   return nodemailer.createTransport({
     ...config,
     tls: {
@@ -17,17 +17,17 @@ const createTransporter = (config: any) => {
     maxConnections: 1,
     rateDelta: 1000,
     rateLimit: 5,
-    connectionTimeout: 60000,
-    greetingTimeout: 30000,
-    socketTimeout: 60000,
+    connectionTimeout: fastFail ? 10000 : 60000, // 10 seconds for fast fail, 60 seconds for normal
+    greetingTimeout: fastFail ? 5000 : 30000, // 5 seconds for fast fail, 30 seconds for normal
+    socketTimeout: fastFail ? 10000 : 60000, // 10 seconds for fast fail, 60 seconds for normal
   });
 };
 
-// Primary transporter (custom SMTP if configured, otherwise Gmail)
+// Primary transporter (use port 465 as it's working on Render)
 const primaryTransporter = createTransporter({
-  host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_SECURE === "true",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -38,15 +38,6 @@ const primaryTransporter = createTransporter({
 const fallbackConfigs = [
   {
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  },
-  {
-    host: "smtp.gmail.com",
     port: 587,
     secure: false,
     auth: {
@@ -54,9 +45,21 @@ const fallbackConfigs = [
       pass: process.env.EMAIL_PASS,
     },
   },
+  // Custom SMTP if configured (try last)
+  ...(process.env.SMTP_HOST ? [{
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  }] : []),
 ];
 
-const fallbackTransporters = fallbackConfigs.map(createTransporter);
+const fallbackTransporters = fallbackConfigs.map((config, index) => 
+  createTransporter(config, index === 0) // Fast fail only for port 587 (first fallback)
+);
 
 // Function to try sending email with fallback transporters
 const sendMailWithFallback = async (mailOptions: any) => {
@@ -65,12 +68,19 @@ const sendMailWithFallback = async (mailOptions: any) => {
   for (let i = 0; i < transporters.length; i++) {
     try {
       await transporters[i].sendMail(mailOptions);
-      console.log(`Email sent successfully using transporter ${i + 1}`);
+      if (i === 0) {
+        console.log("Email sent successfully using primary transporter");
+      } else {
+        console.log(`Email sent successfully using fallback transporter ${i}`);
+      }
       return;
     } catch (error) {
-      console.error(`Transporter ${i + 1} failed:`, error);
+      // Only log detailed errors for the last attempt (all failed)
       if (i === transporters.length - 1) {
-        throw error; // All transporters failed
+        console.error("All email transporters failed:", error);
+      } else {
+        // Silent fail for fallback attempts
+        console.log(`Transporter ${i + 1} failed, trying next...`);
       }
     }
   }
