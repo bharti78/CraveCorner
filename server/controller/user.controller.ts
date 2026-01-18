@@ -140,12 +140,26 @@ export const forgotPassword = async (req: Request, res: Response) => {
     await user.save();
 
     // send email
-    await sendPasswordResetEmail(user.email, resetToken);
+    let emailSent = true;
+    try {
+      await sendPasswordResetEmail(user.email, resetToken);
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+      emailSent = false;
+    }
 
-    return res.status(200).json({
+    const response: any = {
       success: true,
-      message: "Password reset OTP sent to your email",
-    });
+      message: emailSent ? "Password reset OTP sent to your email" : "Password reset OTP generated (email delivery failed)",
+    };
+    
+    // In development, include the OTP in the response for testing
+    if (process.env.NODE_ENV !== "production" && !emailSent) {
+      response.otp = resetToken;
+      response.debug = "Email failed - OTP included for testing only";
+    }
+
+    return res.status(200).json(response);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
