@@ -158,7 +158,9 @@ export const searchRestaurant = async (req: Request, res: Response) => {
         }
        
         if(selectedCuisines.length > 0){
-            query.cuisines = {$in:selectedCuisines}
+            query.cuisines = {
+                $in: selectedCuisines.map((cuisine) => new RegExp(`^${cuisine.trim()}s?$`, "i"))
+            }
         }
         
         const restaurants = await Restaurant.find(query);

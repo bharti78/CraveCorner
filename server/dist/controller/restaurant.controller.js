@@ -166,7 +166,9 @@ const searchRestaurant = async (req, res) => {
             ];
         }
         if (selectedCuisines.length > 0) {
-            query.cuisines = { $in: selectedCuisines };
+            query.cuisines = {
+                $in: selectedCuisines.map((cuisine) => new RegExp(`^${cuisine.trim()}s?$`, "i"))
+            };
         }
         const restaurants = await restaurant_model_1.Restaurant.find(query);
         return res.status(200).json({

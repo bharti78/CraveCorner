@@ -31,7 +31,7 @@ const FilterPage = () => {
           <Checkbox
             id={option.id}
             checked={appliedFilter.includes(option.label)}
-            onClick={() => appliedFilterHandler(option.label)}
+            onCheckedChange={() => appliedFilterHandler(option.label)}
           />
           <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             {option.label}
