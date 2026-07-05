@@ -35,6 +35,12 @@ exports.getOrders = getOrders;
 const createCheckoutSession = async (req, res) => {
     try {
         const checkoutSessionRequest = req.body;
+        if (!checkoutSessionRequest.restaurantId) {
+            return res.status(400).json({ success: false, message: "Restaurant is required for checkout." });
+        }
+        if (!checkoutSessionRequest.cartItems?.length) {
+            return res.status(400).json({ success: false, message: "Your cart is empty." });
+        }
         const restaurant = await restaurant_model_1.Restaurant.findById(checkoutSessionRequest.restaurantId).populate('menus');
         if (!restaurant) {
             return res.status(404).json({
@@ -55,7 +61,7 @@ const createCheckoutSession = async (req, res) => {
         const session = await getStripe().checkout.sessions.create({
             payment_method_types: ['card'],
             shipping_address_collection: {
-                allowed_countries: ['GB', 'US', 'CA']
+                allowed_countries: ['GB', 'US', 'CA', 'IN']
             },
             line_items: lineItems,
             mode: 'payment',
@@ -128,6 +134,10 @@ const createLineItems = (checkoutSessionRequest, menuItems) => {
         const menuItem = menuItems.find((item) => item._id.toString() === cartItem.menuId);
         if (!menuItem)
             throw new Error(`Menu item id not found`);
+        const quantity = Number(cartItem.quantity);
+        if (!Number.isInteger(quantity) || quantity < 1) {
+            throw new Error(`Invalid quantity for ${menuItem.name}`);
+        }
         return {
             price_data: {
                 currency: 'inr',
@@ -137,7 +147,7 @@ const createLineItems = (checkoutSessionRequest, menuItems) => {
                 },
                 unit_amount: menuItem.price * 100
             },
-            quantity: cartItem.quantity,
+            quantity,
         };
     });
     // 2. return lineItems

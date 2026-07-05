@@ -1,5 +1,6 @@
 import { CheckoutSessionRequest, OrderState } from "@/types/orderType";
 import axios from "axios";
+import { toast } from "sonner";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -20,9 +21,15 @@ export const useOrderStore = create<OrderState>()(persist((set => ({
                     'Content-Type': 'application/json'
                 }
             });
-            window.location.href = response.data.session.url;
+            const checkoutUrl = response.data?.session?.url;
+            if (!checkoutUrl) {
+                throw new Error("Payment session was not created. Please try again.");
+            }
+            window.location.href = checkoutUrl;
             set({ loading: false });
-        } catch (error) {
+        } catch (error: any) {
+            const message = error.response?.data?.message || error.message || "Unable to continue to payment.";
+            toast.error(message);
             set({ loading: false });
         }
     },

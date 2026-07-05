@@ -9,6 +9,7 @@ import { CheckoutSessionRequest } from "@/types/orderType";
 import { useCartStore } from "@/store/useCartStore";
 import { useRestaurantStore } from "@/store/useRestaurantStore";
 import { useOrderStore } from "@/store/useOrderStore";
+import { toast } from "sonner";
 
 const CheckoutConfirmPage = ({
   open,
@@ -27,7 +28,7 @@ const CheckoutConfirmPage = ({
     country: user?.country || "",
   });
   const {cart} = useCartStore();
-  const {restaurant} = useRestaurantStore();
+  const {restaurant, singleRestaurant} = useRestaurantStore();
   const {createCheckoutSession, loading} = useOrderStore();
   const changeEventHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,16 +38,22 @@ const CheckoutConfirmPage = ({
   const checkoutHandler = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
+      const restaurantId = singleRestaurant?._id || restaurant?._id;
+      if (!restaurantId) {
+        toast.error("Please select a restaurant before continuing to payment.");
+        return;
+      }
+
       const checkoutData: CheckoutSessionRequest = {
         cartItems: cart.map((cartItem) => ({
           menuId: cartItem._id,
           name: cartItem.name,
           image: cartItem.image,
-          price: cartItem.price.toString(),
-          quantity: cartItem.quantity.toString(),
+          price: cartItem.price,
+          quantity: cartItem.quantity,
         })),
         deliveryDetails: input,
-        restaurantId: restaurant?._id as string,
+        restaurantId,
       };
       
       await createCheckoutSession(checkoutData);

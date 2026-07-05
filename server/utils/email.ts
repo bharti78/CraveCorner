@@ -64,17 +64,25 @@ const fallbackTransporters = fallbackConfigs.map((config, index) =>
 // Function to try sending email with fallback transporters
 const sendMailWithFallback = async (mailOptions: any) => {
   const transporters = [primaryTransporter, ...fallbackTransporters];
+  let lastError: unknown;
   
   for (let i = 0; i < transporters.length; i++) {
     try {
-      await transporters[i].sendMail(mailOptions);
+      const info = await transporters[i].sendMail(mailOptions);
       if (i === 0) {
         console.log("Email sent successfully using primary transporter");
       } else {
         console.log(`Email sent successfully using fallback transporter ${i}`);
       }
+      console.log("Email delivery result:", {
+        messageId: info.messageId,
+        accepted: info.accepted,
+        rejected: info.rejected,
+        response: info.response,
+      });
       return;
     } catch (error) {
+      lastError = error;
       // Only log detailed errors for the last attempt (all failed)
       if (i === transporters.length - 1) {
         console.error("All email transporters failed:", error);
@@ -84,6 +92,8 @@ const sendMailWithFallback = async (mailOptions: any) => {
       }
     }
   }
+
+  throw lastError || new Error("All email transporters failed");
 };
 
 export const sendVerificationEmail = async (

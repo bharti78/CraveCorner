@@ -49,6 +49,13 @@ export const getOrders = async (req: Request, res: Response) => {
 export const createCheckoutSession = async (req: Request, res: Response) => {
     try {
         const checkoutSessionRequest: CheckoutSessionRequest = req.body;
+        if (!checkoutSessionRequest.restaurantId) {
+            return res.status(400).json({ success: false, message: "Restaurant is required for checkout." });
+        }
+        if (!checkoutSessionRequest.cartItems?.length) {
+            return res.status(400).json({ success: false, message: "Your cart is empty." });
+        }
+
         const restaurant = await Restaurant.findById(checkoutSessionRequest.restaurantId).populate('menus');
         if (!restaurant) {
             return res.status(404).json({
@@ -71,7 +78,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         const session = await getStripe().checkout.sessions.create({
             payment_method_types: ['card'],
             shipping_address_collection: {
-                allowed_countries: ['GB', 'US', 'CA']
+                allowed_countries: ['GB', 'US', 'CA', 'IN']
             },
             line_items: lineItems,
             mode: 'payment',
@@ -149,6 +156,10 @@ export const createLineItems = (checkoutSessionRequest: CheckoutSessionRequest, 
     const lineItems = checkoutSessionRequest.cartItems.map((cartItem) => {
         const menuItem = menuItems.find((item: any) => item._id.toString() === cartItem.menuId);
         if (!menuItem) throw new Error(`Menu item id not found`);
+        const quantity = Number(cartItem.quantity);
+        if (!Number.isInteger(quantity) || quantity < 1) {
+            throw new Error(`Invalid quantity for ${menuItem.name}`);
+        }
 
         return {
             price_data: {
@@ -159,7 +170,7 @@ export const createLineItems = (checkoutSessionRequest: CheckoutSessionRequest, 
                 },
                 unit_amount: menuItem.price * 100
             },
-            quantity: cartItem.quantity,
+            quantity,
         }
     })
     // 2. return lineItems
